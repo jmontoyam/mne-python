@@ -143,6 +143,8 @@ def infomax(data, weights=None, l_rate=None, block=None, w_change=1e-12,
     startweights = weights.copy()
     oldweights = startweights.copy()
     step = 0
+    n_iter = 0
+    converged = False
     count_small_angle = 0
     wts_blowup = False
     blockno = 0
@@ -245,6 +247,7 @@ def infomax(data, weights=None, l_rate=None, block=None, w_change=1e-12,
         if not wts_blowup:
             oldwtchange = weights - oldweights
             step += 1
+            n_iter += 1
             angledelta = 0.0
             delta = oldwtchange.reshape(1, n_features_square)
             change = np.sum(delta * delta, dtype=np.float64)
@@ -279,6 +282,7 @@ def infomax(data, weights=None, l_rate=None, block=None, w_change=1e-12,
             # apply stopping rule
             if step > 2 and change < w_change:
                 step = max_iter
+                converged = True
             elif change > blowup:
                 l_rate *= blowup_fac
 
@@ -286,6 +290,7 @@ def infomax(data, weights=None, l_rate=None, block=None, w_change=1e-12,
         # (for lowering l_rate)
         else:
             step = 0  # start again
+            n_iter = 0
             wts_blowup = 0  # re-initialize variables
             blockno = 1
             l_rate *= restart_fac  # with lower learning rate
@@ -312,4 +317,4 @@ def infomax(data, weights=None, l_rate=None, block=None, w_change=1e-12,
                                  'might not be invertible!')
 
     # prepare return values
-    return weights.T
+    return weights.T, n_iter, converged
